@@ -1,0 +1,447 @@
+openapi: 3.0.3
+
+info:
+  title: Dashboard API
+  version: 1.0.0
+  description: API for dashboard reporting and daily metrics management.
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+
+paths:
+  /auth/login:
+    post:
+      operationId: login
+      summary: User login
+      description: Authenticate an admin or staff user and set a JWT in an HttpOnly cookie.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login successful. Sets the authentication cookie.
+          headers:
+            Set-Cookie:
+              description: Authentication cookie containing the JWT.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "400":
+          description: Invalid request
+        "401":
+          description: Invalid credentials
+        "500":
+          description: Internal server error
+
+  /auth/logout:
+    post:
+      operationId: logout
+      summary: User logout
+      description: Log out the current user by clearing the JWT authentication cookie.
+      responses:
+        "200":
+          description: Logout successful. Clears the authentication cookie.
+          headers:
+            Set-Cookie:
+              description: Clears the authentication cookie.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "500":
+          description: Internal server error
+
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      summary: Get dashboard summary for this week and last week
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Dashboard summary retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+        "401":
+          description: Missing or invalid authentication token
+        "500":
+          description: Internal server error
+
+  /dashboard/revenue-trend:
+    get:
+      operationId: getDashboardRevenueTrend
+      summary: Get weekly revenue trend
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: comparePrevious
+          required: false
+          description: Include the previous week's data when true
+          schema:
+            type: boolean
+            default: false
+      responses:
+        "200":
+          description: Revenue trend retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RevenueTrendResponse"
+        "401":
+          description: Missing or invalid authentication token
+        "500":
+          description: Internal server error
+
+  /admin/daily-metrics:
+    get:
+      operationId: getAdminDailyMetrics
+      summary: Get daily metrics
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: startDate
+          required: false
+          description: Filter from this date through today if endDate is omitted
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: endDate
+          required: false
+          description: Filter records up to this date
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: currentPage
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: itemsPerPage
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+      responses:
+        "200":
+          description: Daily metrics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DailyMetricList"
+        "400":
+          description: Invalid query parameters
+        "401":
+          description: Missing or invalid authentication token
+        "403":
+          description: Admin role required
+        "500":
+          description: Internal server error
+
+    post:
+      operationId: createAdminDailyMetric
+      summary: Create daily metrics
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DailyMetricRequest"
+      responses:
+        "201":
+          description: Daily metrics created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DailyMetricItem"
+        "400":
+          description: Invalid request data
+        "401":
+          description: Missing or invalid authentication token
+        "403":
+          description: Admin role required
+        "409":
+          description: Metrics already exist for this date
+        "500":
+          description: Internal server error
+
+  /admin/daily-metrics/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        description: Daily metrics record ID
+        schema:
+          type: string
+          pattern: "^[1-9][0-9]*$"
+
+    get:
+      operationId: getAdminDailyMetricById
+      summary: Get daily metrics by ID
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Daily metrics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DailyMetricItem"
+        "400":
+          description: Invalid ID
+        "401":
+          description: Missing or invalid authentication token
+        "403":
+          description: Admin role required
+        "404":
+          description: Daily metrics not found
+        "500":
+          description: Internal server error
+
+    put:
+      operationId: updateAdminDailyMetric
+      summary: Update daily metrics
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DailyMetricRequest"
+      responses:
+        "200":
+          description: Daily metrics updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DailyMetricItem"
+        "400":
+          description: Invalid request data or ID
+        "401":
+          description: Missing or invalid authentication token
+        "403":
+          description: Admin role required
+        "404":
+          description: Daily metrics not found
+        "409":
+          description: Metrics already exist for this date
+        "500":
+          description: Internal server error
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: admin@example.com
+        password:
+          type: string
+          format: password
+          example: your-password
+
+    LoginResponse:
+      type: object
+      required:
+        - email
+        - role
+      properties:
+        email:
+          type: string
+          format: email
+          example: admin@example.com
+        role:
+          type: string
+          enum:
+            - admin
+            - staff
+          example: admin
+
+    MessageResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+
+    DailyMetricRequest:
+      type: object
+      required:
+        - metricDate
+        - posRevenue
+        - eatclubRevenue
+        - labourCosts
+        - covers
+      properties:
+        metricDate:
+          type: string
+          format: date
+          example: "2026-10-20"
+        posRevenue:
+          type: number
+          minimum: 0
+          example: 1200
+        eatclubRevenue:
+          type: number
+          minimum: 0
+          example: 800
+        labourCosts:
+          type: number
+          minimum: 0
+          example: 500
+        covers:
+          type: integer
+          minimum: 0
+          example: 45
+
+    DailyMetricItem:
+      type: object
+      required:
+        - id
+        - metricDate
+        - posRevenue
+        - eatclubRevenue
+        - labourCosts
+        - covers
+      properties:
+        id:
+          type: string
+          example: "123"
+        metricDate:
+          type: string
+          format: date
+        posRevenue:
+          type: number
+        eatclubRevenue:
+          type: number
+        labourCosts:
+          type: number
+        covers:
+          type: integer
+
+    DailyMetricList:
+      type: object
+      required:
+        - data
+        - currentPage
+        - itemsPerPage
+        - totalItems
+        - totalPages
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/DailyMetricItem"
+        currentPage:
+          type: integer
+        itemsPerPage:
+          type: integer
+        totalItems:
+          type: integer
+        totalPages:
+          type: integer
+
+    DashboardSummary:
+      type: object
+      required:
+        - thisWeek
+        - lastWeek
+      properties:
+        thisWeek:
+          type: object
+          required:
+            - totalRevenue
+            - averageRevenuePerDay
+            - totalCovers
+          properties:
+            totalRevenue:
+              type: number
+              example: 6000
+            averageRevenuePerDay:
+              type: number
+              example: 2000
+            totalCovers:
+              type: integer
+              example: 120
+        lastWeek:
+          type: object
+          required:
+            - totalRevenue
+            - averageRevenuePerDay
+            - totalCovers
+          properties:
+            totalRevenue:
+              type: number
+              example: 14000
+            averageRevenuePerDay:
+              type: number
+              example: 2000
+            totalCovers:
+              type: integer
+              example: 320
+
+    RevenueTrendResponse:
+      type: object
+      required:
+        - currentWeek
+      properties:
+        currentWeek:
+          type: array
+          items:
+            $ref: "#/components/schemas/RevenueTrendItem"
+        lastWeek:
+          type: array
+          description: Included when comparePrevious=true
+          items:
+            $ref: "#/components/schemas/RevenueTrendItem"
+
+    RevenueTrendItem:
+      type: object
+      required:
+        - metricDate
+        - posRevenue
+        - eatclubRevenue
+        - labourCosts
+      properties:
+        metricDate:
+          type: string
+          format: date
+        posRevenue:
+          type: number
+        eatclubRevenue:
+          type: number
+        labourCosts:
+          type: number
