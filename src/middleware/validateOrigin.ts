@@ -3,7 +3,6 @@ import type { Request, Response, NextFunction } from "express";
 const stateChangingMethods = new Set([
     "POST",
     "PUT",
-    "PATCH",
     "DELETE",
 ]);
 

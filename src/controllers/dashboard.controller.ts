@@ -5,7 +5,6 @@ import { DateTime } from "luxon";
 import { VIETNAM_ZONE } from "../utils/date.utils";
 import { DashboardSummary, MessageResponse, RevenueTrendResponse } from "../types/generated-api";
 
-
 export async function getDashboardSummary(
     _req: Request,
     res: Response<DashboardSummary | MessageResponse>
@@ -48,7 +47,18 @@ export async function getDashboardSummary(
                     CASE WHEN metric_date BETWEEN $3 AND $4
                     THEN COALESCE(covers, 0)
                     ELSE 0 END
-                ), 0) AS "lastWeekTotalCovers"
+                ), 0) AS "lastWeekTotalCovers",
+
+                COUNT(DISTINCT CASE
+                    WHEN metric_date BETWEEN $1 AND $2
+                    THEN metric_date
+                END) AS "thisWeekDaysWithData",
+
+                COUNT(DISTINCT CASE
+                    WHEN metric_date BETWEEN $3 AND $4
+                    THEN metric_date
+                END) AS "lastWeekDaysWithData"
+
              FROM daily_metrics
              WHERE metric_date BETWEEN $3 AND $2`,
             [thisWeekStart, todayDate, lastWeekStart, lastWeekEnd]
@@ -56,17 +66,27 @@ export async function getDashboardSummary(
 
         const row = result.rows[0];
 
+        const thisWeekTotalRevenue = Number(row.thisWeekTotalRevenue);
+        const lastWeekTotalRevenue = Number(row.lastWeekTotalRevenue);
+
+        const thisWeekDaysWithData = Number(row.thisWeekDaysWithData);
+        const lastWeekDaysWithData = Number(row.lastWeekDaysWithData);
+
         res.status(200).json({
             thisWeek: {
-                totalRevenue: Number(row.thisWeekTotalRevenue),
+                totalRevenue: thisWeekTotalRevenue,
                 averageRevenuePerDay:
-                    Number(row.thisWeekTotalRevenue) / today.weekday,
+                    thisWeekDaysWithData > 0
+                        ? thisWeekTotalRevenue / thisWeekDaysWithData
+                        : 0,
                 totalCovers: Number(row.thisWeekTotalCovers),
             },
             lastWeek: {
-                totalRevenue: Number(row.lastWeekTotalRevenue),
+                totalRevenue: lastWeekTotalRevenue,
                 averageRevenuePerDay:
-                    Number(row.lastWeekTotalRevenue) / 7,
+                    lastWeekDaysWithData > 0
+                        ? lastWeekTotalRevenue / lastWeekDaysWithData
+                        : 0,
                 totalCovers: Number(row.lastWeekTotalCovers),
             },
         });

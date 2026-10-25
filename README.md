@@ -34,10 +34,10 @@
 
    ```env
    ADMIN_EMAIL=admin@gmail.com
-   ADMIN_PASSWORD=admin123
+   ADMIN_PASSWORD=admin321
 
    STAFF_EMAIL=staff@gmail.com
-   STAFF_PASSWORD=staff123
+   STAFF_PASSWORD=staff321
    ```
 
 5. Install Docker Desktop or OrbStack, a lightweight alternative for macOS.
