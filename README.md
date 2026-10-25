@@ -29,14 +29,15 @@
    - **staff:** Can only view the dashboard.
    - **admin:** Can access the management page to create and edit data displayed on the dashboard.
 
-   Set an email and password for each role in your `.env` file. These credentials are used to create the initial accounts.
+   Set an email and password for each role in your `.env` file as in the example below.
+   These credentials are used to create the initial accounts.
 
    ```env
-   ADMIN_EMAIL=
-   ADMIN_PASSWORD=
+   ADMIN_EMAIL=admin@gmail.com
+   ADMIN_PASSWORD=admin123
 
-   STAFF_EMAIL=
-   STAFF_PASSWORD=
+   STAFF_EMAIL=staff@gmail.com
+   STAFF_PASSWORD=staff123
    ```
 
 5. Install Docker Desktop or OrbStack, a lightweight alternative for macOS.

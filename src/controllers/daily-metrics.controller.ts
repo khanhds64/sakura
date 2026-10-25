@@ -1,11 +1,18 @@
 import type { Request, Response } from "express";
 import { pool } from "../config/database";
-import { DATE_FORMAT_YYYYMMDD_HYPHEN, isValidDate } from "../utils/date.utils";
+import { DATE_FORMAT_YYYYMMDD_HYPHEN, isValidDate, VIETNAM_ZONE } from "../utils/date.utils";
 import { DateTime } from "luxon";
+import { DailyMetricItem, DailyMetricList, DailyMetricListQuery, DailyMetricRequest, MessageResponse } from "../types/generated-api";
 
-export async function getDailyMetrics(
-    req: Request,
-    res: Response
+type DailyMetricListQueryRequest =
+    Omit<DailyMetricListQuery, "currentPage" | "itemsPerPage"> & {
+        currentPage?: string;
+        itemsPerPage?: string;
+    };
+
+export async function getDailyMetricList(
+    req: Request<{}, {}, {}, DailyMetricListQueryRequest>,
+    res: Response<DailyMetricList | MessageResponse>
 ): Promise<void> {
     try {
         const { startDate, endDate } = req.query;
@@ -53,10 +60,10 @@ export async function getDailyMetrics(
         if (
             !Number.isSafeInteger(currentPage) ||
             !Number.isSafeInteger(itemsPerPage) ||
-            itemsPerPage > 100
+            itemsPerPage > 50
         ) {
             res.status(400).json({
-                message: "currentPage must be a safe positive integer and itemsPerPage must be between 1 and 100",
+                message: "currentPage must be a safe positive integer and itemsPerPage must be between 1 and 50",
             });
             return;
         }
@@ -64,7 +71,7 @@ export async function getDailyMetrics(
         // Build shared filters for both SQL queries.
         const conditions: string[] = [];
         const values: string[] = [];
-        const today = DateTime.now().toFormat(DATE_FORMAT_YYYYMMDD_HYPHEN);
+        const today = DateTime.now().setZone(VIETNAM_ZONE).toFormat(DATE_FORMAT_YYYYMMDD_HYPHEN);
 
         if (startDate !== undefined) {
             conditions.push(`metric_date >= $${values.length + 1}`);
@@ -147,8 +154,8 @@ export async function getDailyMetrics(
 }
 
 export async function createDailyMetric(
-    req: Request,
-    res: Response
+    req: Request<{}, {}, DailyMetricRequest>,
+    res: Response<MessageResponse>
 ): Promise<void> {
 
     try {
@@ -257,8 +264,8 @@ export async function createDailyMetric(
 }
 
 export async function getDailyMetricById(
-    req: Request,
-    res: Response
+    req: Request<{ id: string }>,
+    res: Response<DailyMetricItem | MessageResponse>
 ): Promise<void> {
     try {
         const { id } = req.params;
@@ -307,8 +314,8 @@ export async function getDailyMetricById(
 }
 
 export async function updateDailyMetric(
-    req: Request,
-    res: Response
+    req: Request<{ id: string }, any, DailyMetricRequest>,
+    res: Response<DailyMetricItem | MessageResponse>
 ): Promise<void> {
     try {
         const { id } = req.params;

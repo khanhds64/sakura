@@ -85,8 +85,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get daily metrics */
-        get: operations["getAdminDailyMetrics"];
+        /** Get daily metric list */
+        get: operations["getDailyMetricList"];
         put?: never;
         /** Create daily metrics */
         post: operations["createAdminDailyMetric"];
@@ -107,9 +107,9 @@ export interface paths {
             cookie?: never;
         };
         /** Get daily metrics by ID */
-        get: operations["getAdminDailyMetricById"];
+        get: operations["getDailyMetricById"];
         /** Update daily metrics */
-        put: operations["updateAdminDailyMetric"];
+        put: operations["updateDailyMetric"];
         post?: never;
         delete?: never;
         options?: never;
@@ -173,6 +173,16 @@ export interface components {
             labourCosts: number;
             covers: number;
         };
+        DailyMetricListQuery: {
+            /** Format: date */
+            startDate?: string;
+            /** Format: date */
+            endDate?: string;
+            /** @default 1 */
+            currentPage: number;
+            /** @default 10 */
+            itemsPerPage: number;
+        };
         DailyMetricList: {
             data: components["schemas"]["DailyMetricItem"][];
             currentPage: number;
@@ -222,6 +232,7 @@ export type LoginResponse = components['schemas']['LoginResponse'];
 export type MessageResponse = components['schemas']['MessageResponse'];
 export type DailyMetricRequest = components['schemas']['DailyMetricRequest'];
 export type DailyMetricItem = components['schemas']['DailyMetricItem'];
+export type DailyMetricListQuery = components['schemas']['DailyMetricListQuery'];
 export type DailyMetricList = components['schemas']['DailyMetricList'];
 export type DashboardSummary = components['schemas']['DashboardSummary'];
 export type RevenueTrendResponse = components['schemas']['RevenueTrendResponse'];
@@ -375,7 +386,7 @@ export interface operations {
             };
         };
     };
-    getAdminDailyMetrics: {
+    getDailyMetricList: {
         parameters: {
             query?: {
                 /** @description Filter from this date through today if endDate is omitted */
@@ -489,7 +500,7 @@ export interface operations {
             };
         };
     };
-    getAdminDailyMetricById: {
+    getDailyMetricById: {
         parameters: {
             query?: never;
             header?: never;
@@ -547,7 +558,7 @@ export interface operations {
             };
         };
     };
-    updateAdminDailyMetric: {
+    updateDailyMetric: {
         parameters: {
             query?: never;
             header?: never;

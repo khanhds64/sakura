@@ -2,9 +2,9 @@ import { Router } from "express";
 import { authenticateToken } from "../middleware/auth.middleware";
 import { requireAdmin } from "../middleware/requireAdmin";
 import {
-    getDailyMetrics,
     createDailyMetric,
     getDailyMetricById,
+    getDailyMetricList,
     updateDailyMetric,
 } from "../controllers/daily-metrics.controller";
 import { validateOrigin } from "../middleware/validateOrigin";
@@ -15,7 +15,7 @@ router.get(
     "/",
     authenticateToken,
     requireAdmin,
-    getDailyMetrics
+    getDailyMetricList
 );
 
 router.post(

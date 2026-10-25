@@ -3,7 +3,7 @@ import type { Request, Response } from "express";
 import { pool } from "../config/database";
 import { DateTime } from "luxon";
 import { VIETNAM_ZONE } from "../utils/date.utils";
-import { DashboardSummary, MessageResponse } from "../types/generated-api";
+import { DashboardSummary, MessageResponse, RevenueTrendResponse } from "../types/generated-api";
 
 
 export async function getDashboardSummary(
@@ -79,9 +79,9 @@ export async function getDashboardSummary(
     }
 }
 
-export async function getRevenueTrend(
-    req: Request,
-    res: Response
+export async function getDashboardRevenueTrend(
+    req: Request<{}, {}, {}, { comparePrevious?: string }>,
+    res: Response<RevenueTrendResponse | MessageResponse>
 ): Promise<void> {
     const comparePrevious = req.query.comparePrevious === "true";
 
