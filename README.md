@@ -44,6 +44,12 @@
    - [Docker Desktop for macOS](https://docs.docker.com/desktop/setup/install/mac-install/)
    - [Download OrbStack](https://orbstack.dev/download)
 
+   After installation, run the command below to verify that Docker was installed successfully and check its version.
+
+   ```bash
+   docker -v
+   ```
+
 6. Open your IDE's terminal and navigate to the `sakura` project directory.
    Then, run the following command to build the project images and starts the three services defined in the Docker: db, migration, and backend.
 
